@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>坦克大战 - Tank Battle</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,16 +11,26 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   font-family: 'Segoe UI', sans-serif;
-  overflow: hidden;
+  overflow-y: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .game-wrapper {
   display: flex;
   gap: 20px;
-  align-items: stretch;
+  align-items: center;
+  padding: 10px;
+}
+.canvas-container {
+  position: relative;
+  flex-shrink: 0;
 }
 canvas {
+  display: block;
   border: 3px solid #444;
   background: #0a0a0a;
 }
@@ -57,23 +67,176 @@ canvas {
   transition: background 0.2s;
 }
 .btn:hover { background: #c73655; }
+.btn-start {
+  background: #4ade80;
+  color: #000;
+  border: none;
+  padding: 14px 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+.btn-start:hover { background: #22c55e; }
+.start-screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  z-index: 10;
+}
+.start-screen h1 {
+  color: #e94560;
+  font-size: 42px;
+  text-align: center;
+}
+.start-screen .subtitle {
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  padding: 0 10px;
+}
+/* Mobile touch controls */
+.mobile-controls {
+  display: none;
+  width: 100%;
+  max-width: 520px;
+}
+.mobile-stats {
+  display: none;
+  justify-content: space-around;
+  color: #e0e0e0;
+  font-size: 14px;
+  padding: 8px 5px;
+  gap: 5px;
+}
+.mobile-stats .mstat { text-align: center; }
+.mobile-stats .mstat .val { color: #f5c518; font-weight: bold; font-size: 16px; }
+.touch-pad {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  gap: 10px;
+}
+.dpad {
+  display: grid;
+  grid-template-columns: 60px 60px 60px;
+  grid-template-rows: 60px 60px 60px;
+  gap: 4px;
+}
+.dpad-btn {
+  background: #2a3a5e;
+  border: 2px solid #4a6a9e;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.dpad-btn:active { background: #4a7ac0; border-color: #8ab0ff; }
+.dpad-empty { visibility: hidden; }
+.fire-btn {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: #e94560;
+  border: 3px solid #ff6b81;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fire-btn:active { background: #ff2040; transform: scale(0.95); }
+.action-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 5px;
+}
+.action-btns .btn {
+  font-size: 13px;
+  padding: 8px 16px;
+}
+
+@media (max-width: 768px) {
+  body { align-items: flex-start; padding-top: 5px; }
+  .game-wrapper { flex-direction: column; gap: 8px; }
+  .sidebar { display: none; }
+  .canvas-container { max-width: 100%; }
+  canvas { max-width: 100%; height: auto !important; }
+  .mobile-stats { display: flex; }
+  .mobile-controls { display: block; }
+  .start-screen h1 { font-size: 28px; }
+  .start-screen { gap: 18px; }
+}
+@media (min-width: 769px) {
+  canvas { width: auto; height: auto; }
+}
 </style>
 </head>
 <body>
 <div class="game-wrapper">
-  <canvas id="game" width="520" height="520"></canvas>
-  <div class="sidebar">
+  <div class="canvas-container">
+    <canvas id="game" width="520" height="520"></canvas>
+    <div class="start-screen" id="startScreen">
+      <h1>🎮 坦克大战</h1>
+      <div class="subtitle">经典 FC 坦克大战 · HTML5 Canvas</div>
+      <button class="btn-start" id="btnStart">开始游戏</button>
+      <div class="subtitle" id="startHint">WASD 移动 · K 射击 · P 暂停</div>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar">
     <h2>🎮 坦克大战</h2>
     <div class="stat"><span>🏆 分数</span><span class="val" id="score">0</span></div>
     <div class="stat"><span>❤️ 生命</span><span class="val" id="lives">3</span></div>
     <div class="stat"><span>💀 击杀</span><span class="val" id="kills">0</span></div>
     <div class="stat"><span>🌊 波次</span><span class="val" id="wave">1</span></div>
     <button class="btn" id="restart">重新开始</button>
+    <button class="btn" id="pauseBtn" style="background:#0f3460;">暂停 (P)</button>
     <div class="controls">
       <div><span>W A S D</span> 移动</div>
       <div><span>K</span> 射击</div>
+      <div><span>P</span> 暂停</div>
       <div><span>R</span> 重新开始</div>
     </div>
+  </div>
+</div>
+
+<!-- Mobile controls -->
+<div class="mobile-stats" id="mobileStats">
+  <div class="mstat">🏆 <span class="val" id="mScore">0</span></div>
+  <div class="mstat">❤️ <span class="val" id="mLives">3</span></div>
+  <div class="mstat">💀 <span class="val" id="mKills">0</span></div>
+  <div class="mstat">🌊 <span class="val" id="mWave">1</span></div>
+</div>
+<div class="mobile-controls" id="mobileControls">
+  <div class="touch-pad">
+    <div class="dpad" id="dpad">
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="up">▲</button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="left">◀</button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="right">▶</button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="down">▼</button>
+      <div class="dpad-empty"></div>
+    </div>
+    <button class="fire-btn" id="fireBtn">发射</button>
+  </div>
+  <div class="action-btns">
+    <button class="btn" id="mPauseBtn" style="background:#0f3460;">暂停</button>
+    <button class="btn" id="mRestart">重新开始</button>
   </div>
 </div>
 
@@ -81,354 +244,73 @@ canvas {
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-// Map dimensions (13x13 grid of 40px cells)
-const COLS = 13;
-const ROWS = 13;
+// Map dimensions
+let COLS = 13;
+let ROWS = 13;
 const CELL = 40;
 
-// Tile types
-const EMPTY = 0;
-const BRICK = 1;
-const STEEL = 2;
-const BASE  = 3;
+function setMapSize(w) {
+  COLS = Math.min(13 + Math.floor((w - 1) / 3) * 2, 21);
+  ROWS = COLS;
+  canvas.width = COLS * CELL;
+  canvas.height = ROWS * CELL;
+}
 
-// Directions
+const EMPTY = 0, BRICK = 1, STEEL = 2, BASE = 3;
 const UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3;
 const DX = [0, 1, 0, -1];
 const DY = [-1, 0, 1, 0];
 
-// Map
 let map = [];
 
-const MAPS = [
-  // Level 1
-  [
-    0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,1,1,0,0,1,1,0,0,1,1,0,
-    0,0,1,0,0,0,0,0,0,0,0,1,0,
-    0,0,0,0,0,1,1,1,0,0,0,0,0,
-    0,0,0,0,0,1,0,1,0,0,0,0,0,
-    0,0,1,0,0,0,0,0,0,0,0,1,0,
-    0,0,0,0,0,1,0,1,0,0,0,0,0,
-    0,0,0,0,0,1,1,1,0,0,0,0,0,
-    0,0,1,0,0,0,0,0,0,0,0,1,0,
-    0,0,1,1,0,0,1,1,0,0,1,1,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,
-  ],
-  // Level 2
-  [
-    0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,1,1,1,0,0,0,1,1,1,0,0,
-    0,0,1,0,0,0,1,0,0,0,1,0,0,
-    0,0,0,0,1,0,1,0,1,0,0,0,0,
-    0,0,0,1,0,0,0,0,0,1,0,0,0,
-    0,0,1,0,0,1,0,1,0,0,1,0,0,
-    0,0,0,0,0,0,1,0,0,0,0,0,0,
-    0,0,1,0,0,1,0,1,0,0,1,0,0,
-    0,0,0,1,0,0,0,0,0,1,0,0,0,
-    0,0,0,0,1,0,1,0,1,0,0,0,0,
-    0,0,1,0,0,0,1,0,0,0,1,0,0,
-    0,0,1,1,1,0,0,0,1,1,1,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,
-  ],
-  // Level 3
-  [
-    2,0,1,2,0,1,0,1,0,2,1,0,2,
-    0,0,0,0,0,1,0,1,0,0,0,0,0,
-    1,0,1,0,1,0,0,0,1,0,1,0,1,
-    2,0,0,0,0,0,2,0,0,0,0,0,2,
-    0,0,1,0,2,0,0,0,2,0,1,0,0,
-    1,1,0,0,0,1,0,1,0,0,0,1,1,
-    0,0,0,2,0,0,1,0,0,2,0,0,0,
-    1,1,0,0,0,1,0,1,0,0,0,1,1,
-    0,0,1,0,2,0,0,0,2,0,1,0,0,
-    2,0,0,0,0,0,2,0,0,0,0,0,2,
-    1,0,1,0,1,0,0,0,1,0,1,0,1,
-    0,0,0,0,0,1,0,1,0,0,0,0,0,
-    2,0,1,2,0,1,0,1,0,2,1,0,2,
-  ],
-];
-
-// Game state
-let player, enemies, bullets, score, lives, kills, wave, gameOver, paused;
-let keyState = {};
-let shootCooldown = 0;
-let enemyShootTimer = 0;
-let gameLoop;
-
-// --- Classes ---
-class Tank {
-  constructor(x, y, dir = UP, color = '#4ade80') {
-    this.x = x;
-    this.y = y;
-    this.dir = dir;
-    this.color = color;
-    this.speed = 0;
-    this.bulletSpeed = 6;
-    this.active = true;
-    this.moveTimer = 0;
-    this.dirChangeTimer = 0;
-  }
-
-  draw() {
-    ctx.save();
-    ctx.translate(this.x * CELL + CELL / 2, this.y * CELL + CELL / 2);
-    ctx.rotate((this.dir * Math.PI) / 2);
-
-    // Body
-    ctx.fillStyle = this.color;
-    ctx.fillRect(-18, -16, 36, 32);
-
-    // Treads
-    ctx.fillStyle = '#333';
-    ctx.fillRect(-20, -18, 6, 36);
-    ctx.fillRect(14, -18, 6, 36);
-
-    // Track marks
-    ctx.strokeStyle = '#555';
-    ctx.lineWidth = 2;
-    for (let i = -16; i <= 16; i += 8) {
-      ctx.beginPath(); ctx.moveTo(-18, i); ctx.lineTo(-14, i); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(18, i); ctx.lineTo(14, i); ctx.stroke();
-    }
-
-    // Barrel
-    ctx.fillStyle = '#ddd';
-    ctx.fillRect(-3, -22, 6, 14);
-
-    ctx.restore();
-  }
-
-  canMove(nx, ny) {
-    if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return false;
-    const t = map[ny][nx];
-    return t === EMPTY && !tankAt(nx, ny, this);
-  }
-
-  tryMove() {
-    const nx = this.x + DX[this.dir];
-    const ny = this.y + DY[this.dir];
-    if (this.canMove(nx, ny)) {
-      this.x = nx;
-      this.y = ny;
-      // Align to grid
-      this.speed = 0;
-      return true;
-    }
-    return false;
-  }
-
-  shoot() {
-    const bx = this.x + DX[this.dir] * 0.6;
-    const by = this.y + DY[this.dir] * 0.6;
-    bullets.push(new Bullet(bx, by, this.dir, this.bulletSpeed, this === player));
-  }
-
-  update() {}
-}
-
-class Bullet {
-  constructor(x, y, dir, speed, fromPlayer) {
-    this.x = x;
-    this.y = y;
-    this.dir = dir;
-    this.speed = speed;
-    this.fromPlayer = fromPlayer;
-    this.active = true;
-  }
-
-  update() {
-    this.x += DX[this.dir] * this.speed * 0.06;
-    this.y += DY[this.dir] * this.speed * 0.06;
-
-    const cx = Math.round(this.x);
-    const cy = Math.round(this.y);
-
-    // Out of bounds
-    if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) { this.active = false; return; }
-
-    const tile = map[cy][cx];
-
-    // Hit steel
-    if (tile === STEEL) { this.active = false; createExplosion(cx, cy); return; }
-
-    // Hit brick
-    if (tile === BRICK) { this.active = false; map[cy][cx] = EMPTY; createExplosion(cx, cy); return; }
-
-    // Hit base
-    if (tile === BASE) { this.active = false; endGame(false); return; }
-
-    // Hit player tank
-    if (!this.fromPlayer && player.active) {
-      if (Math.abs(this.x - player.x) < 0.7 && Math.abs(this.y - player.y) < 0.7) {
-        this.active = false;
-        playerHit();
-        return;
+function generateMap(w) {
+  const data = new Array(COLS * ROWS).fill(EMPTY);
+  const reserved = new Set();
+  const cx = Math.floor(COLS / 2);
+  const cy = ROWS - 1;
+  for (const [sx, sy] of [[0,0],[cx,0],[COLS-1,0],[0,ROWS-1],[COLS-1,ROWS-1]]) {
+    for (let dy = 0; dy < 2; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const ry = sy + dy, rx = sx + dx;
+        if (ry >= 0 && ry < ROWS && rx >= 0 && rx < COLS)
+          reserved.add(ry * COLS + rx);
       }
+  }
+  for (let dy = -3; dy <= 0; dy++)
+    for (let dx = -1; dx <= 1; dx++) {
+      const ry = cy + dy, rx = cx + dx;
+      if (ry >= 0 && ry < ROWS && rx >= 0 && rx < COLS)
+        reserved.add(ry * COLS + rx);
     }
-
-    // Hit enemy
-    if (this.fromPlayer) {
-      for (const e of enemies) {
-        if (e.active && Math.abs(this.x - e.x) < 0.7 && Math.abs(this.y - e.y) < 0.7) {
-          this.active = false;
-          e.active = false;
-          createExplosion(e.x, e.y);
-          kills++;
-          score += 100;
-          updateUI();
-          return;
-        }
+  if (w % 3 === 0) {
+    data[cy * COLS + cx] = BASE;
+    reserved.add(cy * COLS + cx);
+    const guards = [[cx-1, cy], [cx, cy-1], [cx+1, cy]];
+    for (const [gx, gy] of guards) {
+      if (gx >= 0 && gx < COLS && gy >= 0 && gy < ROWS) {
+        data[gy * COLS + gx] = BRICK;
+        reserved.add(gy * COLS + gx);
       }
     }
   }
-
-  draw() {
-    ctx.fillStyle = this.fromPlayer ? '#fff' : '#fbbf24';
-    ctx.beginPath();
-    ctx.arc(this.x * CELL + CELL / 2, this.y * CELL + CELL / 2, 3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-// --- Helpers ---
-function tankAt(x, y, exclude) {
-  if (player.active && player !== exclude && player.x === x && player.y === y) return player;
-  for (const e of enemies) {
-    if (e.active && e !== exclude && e.x === x && e.y === y) return e;
-  }
-  return null;
-}
-
-let explosions = [];
-function createExplosion(x, y) {
-  explosions.push({ x, y, life: 15 });
-}
-
-function playerHit() {
-  if (!player.active) return;
-  player.active = false;
-  createExplosion(player.x, player.y);
-  lives--;
-  updateUI();
-  if (lives <= 0) {
-    setTimeout(() => endGame(false), 500);
-  } else {
-    setTimeout(respawnPlayer, 800);
-  }
-}
-
-function respawnPlayer() {
-  player.x = 6; player.y = 12;
-  player.dir = UP;
-  player.active = true;
-}
-
-function updateUI() {
-  document.getElementById('score').textContent = score;
-  document.getElementById('lives').textContent = lives;
-  document.getElementById('kills').textContent = kills;
-  document.getElementById('wave').textContent = wave;
-}
-
-function endGame(won) {
-  gameOver = true;
-  player.active = false;
-  enemies.forEach(e => e.active = false);
-}
-
-// --- Enemy AI ---
-class Enemy extends Tank {
-  constructor(x, y, color = '#ef4444') {
-    super(x, y, DOWN, color);
-    this.moveTimer = 0;
-    this.shootTimer = 0;
-    this.dirChangeTimer = Math.floor(Math.random() * 60) + 30;
-  }
-
-  update() {
-    if (!this.active || gameOver) return;
-
-    // AI movement
-    this.dirChangeTimer--;
-    this.moveTimer--;
-
-    if (this.dirChangeTimer <= 0) {
-      // Change direction randomly, bias toward current
-      const r = Math.random();
-      if (r < 0.3) this.dir = Math.floor(Math.random() * 4);
-      else if (r < 0.6 && Math.random() > 0.5) {
-        // Try to align with player
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-        if (Math.abs(dx) > Math.abs(dy)) this.dir = dx > 0 ? RIGHT : LEFT;
-        else this.dir = dy > 0 ? DOWN : UP;
-      }
-      this.dirChangeTimer = Math.floor(Math.random() * 40) + 20;
-    }
-
-    if (this.moveTimer <= 0) {
-      if (!this.tryMove()) {
-        // Blocked, change direction
-        this.dir = Math.floor(Math.random() * 4);
-      }
-      this.moveTimer = Math.floor(Math.random() * 15) + 5;
-    }
-
-    // AI shooting
-    this.shootTimer--;
-    if (this.shootTimer <= 0) {
-      // Shoot if roughly aligned with player
-      const dx = player.x - this.x;
-      const dy = player.y - this.y;
-      const aligned =
-        (this.dir === UP && dy < 0 && Math.abs(dx) < 1.5) ||
-        (this.dir === DOWN && dy > 0 && Math.abs(dx) < 1.5) ||
-        (this.dir === LEFT && dx < 0 && Math.abs(dy) < 1.5) ||
-        (this.dir === RIGHT && dx > 0 && Math.abs(dy) < 1.5);
-      if (aligned || Math.random() < 0.02) {
-        this.shoot();
-      }
-      this.shootTimer = Math.floor(Math.random() * 80) + 30;
+  const brickProb = Math.min(0.15 + w * 0.03, 0.4);
+  for (let y = 1; y < ROWS - 1; y++) {
+    for (let x = 1; x < COLS - 1; x++) {
+      if (reserved.has(y * COLS + x)) continue;
+      if (Math.random() < brickProb) data[y * COLS + x] = BRICK;
     }
   }
-}
-
-function spawnEnemies() {
-  const spawnPoints = [
-    [0, 0], [6, 0], [12, 0],
-    [0, 12], [12, 12],
-  ];
-  const count = Math.min(3 + wave, 6);
-  for (let i = 0; i < count; i++) {
-    const sp = spawnPoints[i % spawnPoints.length];
-    const e = new Enemy(sp[0], sp[1]);
-    e.x = sp[0]; e.y = sp[1];
-    // If spawn blocked, try to find free spot
-    if (tankAt(e.x, e.y, null) || map[e.y][e.x] !== EMPTY) {
-      let placed = false;
-      for (let y = 0; y < 3 && !placed; y++) {
-        for (let x = 0; x < COLS && !placed; x++) {
-          if (map[y][x] === EMPTY && !tankAt(x, y, null)) {
-            e.x = x; e.y = y; placed = true;
-          }
-        }
+  const steelProb = w >= 6 ? Math.min((w - 5) * 0.02, 0.12) : 0;
+  if (steelProb > 0) {
+    for (let y = 2; y < ROWS - 2; y++) {
+      for (let x = 2; x < COLS - 2; x++) {
+        if (reserved.has(y * COLS + x)) continue;
+        if (data[y * COLS + x] === EMPTY && Math.random() < steelProb)
+          data[y * COLS + x] = STEEL;
       }
-      if (!placed) continue;
     }
-    enemies.push(e);
   }
-}
-
-function nextWave() {
-  wave++;
-  const mi = (wave - 1) % MAPS.length;
-  loadMap(MAPS[mi]);
-  score += 200;
-  updateUI();
-  setTimeout(spawnEnemies, 1000);
+  return data;
 }
 
 function loadMap(data) {
@@ -441,82 +323,268 @@ function loadMap(data) {
   }
 }
 
-// --- Draw ---
+let player, enemies, bullets, score, lives, kills, wave, gameOver, gameWon, paused, spawning, gameStarted;
+let keyState = {};
+let shootCooldown = 0;
+let playerMoveCooldown = 0;
+let invincibleTimer = 0;
+let gameLoop;
+let pendingTimers = [];
+
+class Tank {
+  constructor(x, y, dir = UP, color = '#4ade80') {
+    this.x = x; this.y = y; this.dir = dir; this.color = color;
+    this.speed = 0; this.bulletSpeed = 3; this.active = true;
+    this.moveTimer = 0; this.dirChangeTimer = 0;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x * CELL + CELL / 2, this.y * CELL + CELL / 2);
+    ctx.rotate((this.dir * Math.PI) / 2);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-18, -16, 36, 32);
+    ctx.fillStyle = '#333';
+    ctx.fillRect(-20, -18, 6, 36);
+    ctx.fillRect(14, -18, 6, 36);
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 2;
+    for (let i = -16; i <= 16; i += 8) {
+      ctx.beginPath(); ctx.moveTo(-18, i); ctx.lineTo(-14, i); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18, i); ctx.lineTo(14, i); ctx.stroke();
+    }
+    ctx.fillStyle = '#ddd';
+    ctx.fillRect(-3, -22, 6, 14);
+    ctx.restore();
+  }
+  canMove(nx, ny) {
+    if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return false;
+    return map[ny][nx] === EMPTY && !tankAt(nx, ny, this);
+  }
+  tryMove() {
+    const nx = this.x + DX[this.dir], ny = this.y + DY[this.dir];
+    if (this.canMove(nx, ny)) { this.x = nx; this.y = ny; this.speed = 0; return true; }
+    return false;
+  }
+  shoot() {
+    const bx = this.x + DX[this.dir] * 0.6;
+    const by = this.y + DY[this.dir] * 0.6;
+    bullets.push(new Bullet(bx, by, this.dir, this.bulletSpeed, this === player));
+  }
+  update() {}
+}
+
+class Bullet {
+  constructor(x, y, dir, speed, fromPlayer) {
+    this.x = x; this.y = y; this.dir = dir; this.speed = speed;
+    this.fromPlayer = fromPlayer; this.active = true;
+  }
+  update() {
+    this.x += DX[this.dir] * this.speed * 0.06;
+    this.y += DY[this.dir] * this.speed * 0.06;
+    const cx = Math.round(this.x), cy = Math.round(this.y);
+    if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) { this.active = false; return; }
+    const tile = map[cy][cx];
+    if (tile === STEEL) { this.active = false; createExplosion(cx, cy); return; }
+    if (tile === BRICK) { this.active = false; map[cy][cx] = EMPTY; createExplosion(cx, cy); return; }
+    if (tile === BASE) { this.active = false; map[cy][cx] = EMPTY; createExplosion(cx, cy); return; }
+    if (!this.fromPlayer && player.active && invincibleTimer <= 0) {
+      if (Math.abs(this.x - player.x) < 0.7 && Math.abs(this.y - player.y) < 0.7) {
+        this.active = false; playerHit(); return;
+      }
+    }
+    if (this.fromPlayer) {
+      for (const e of enemies) {
+        if (e.active && Math.abs(this.x - e.x) < 0.7 && Math.abs(this.y - e.y) < 0.7) {
+          this.active = false; e.active = false;
+          createExplosion(e.x, e.y); kills++; score += 100; updateUI(); return;
+        }
+      }
+    }
+  }
+  draw() {
+    ctx.fillStyle = this.fromPlayer ? '#fff' : '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(this.x * CELL + CELL / 2, this.y * CELL + CELL / 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function tankAt(x, y, exclude) {
+  if (player.active && player !== exclude && player.x === x && player.y === y) return player;
+  for (const e of enemies) {
+    if (e.active && e !== exclude && e.x === x && e.y === y) return e;
+  }
+  return null;
+}
+
+let explosions = [];
+function createExplosion(x, y) { explosions.push({ x, y, life: 15 }); }
+
+function playerHit() {
+  if (!player.active) return;
+  player.active = false;
+  createExplosion(player.x, player.y);
+  lives--;
+  updateUI();
+  if (lives <= 0) {
+    pendingTimers.push(setTimeout(() => endGame(false), 500));
+  } else {
+    pendingTimers.push(setTimeout(respawnPlayer, 800));
+  }
+}
+
+function getSpawnPos() {
+  const cx = Math.floor(COLS / 2);
+  let sy = ROWS - 1;
+  while (sy > 0 && map.length > 0 && map[sy] && map[sy][cx] !== EMPTY) sy--;
+  return { x: cx, y: sy };
+}
+
+function respawnPlayer() {
+  const sp = getSpawnPos();
+  player.x = sp.x; player.y = sp.y;
+  player.dir = UP; player.active = true; invincibleTimer = 180;
+}
+
+function updateUI() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('kills').textContent = kills;
+  document.getElementById('wave').textContent = wave;
+  document.getElementById('mScore').textContent = score;
+  document.getElementById('mLives').textContent = lives;
+  document.getElementById('mKills').textContent = kills;
+  document.getElementById('mWave').textContent = wave;
+}
+
+function endGame(won) {
+  gameOver = true; gameWon = won;
+  player.active = false;
+  enemies.forEach(e => e.active = false);
+}
+
+class Enemy extends Tank {
+  constructor(x, y, color = '#ef4444') {
+    super(x, y, DOWN, color);
+    this.moveTimer = 0; this.shootTimer = 0;
+    this.dirChangeTimer = Math.floor(Math.random() * 80) + 50;
+  }
+  update() {
+    if (!this.active || gameOver) return;
+    this.dirChangeTimer--; this.moveTimer--;
+    if (this.dirChangeTimer <= 0) {
+      const r = Math.random();
+      if (r < 0.3) this.dir = Math.floor(Math.random() * 4);
+      else if (r < 0.6 && Math.random() > 0.5) {
+        const dx = player.x - this.x, dy = player.y - this.y;
+        if (Math.abs(dx) > Math.abs(dy)) this.dir = dx > 0 ? RIGHT : LEFT;
+        else this.dir = dy > 0 ? DOWN : UP;
+      }
+      this.dirChangeTimer = Math.floor(Math.random() * 60) + 40;
+    }
+    if (this.moveTimer <= 0) {
+      if (!this.tryMove()) this.dir = Math.floor(Math.random() * 4);
+      this.moveTimer = Math.floor(Math.random() * 25) + 25;
+    }
+    this.shootTimer--;
+    if (this.shootTimer <= 0) {
+      const dx = player.x - this.x, dy = player.y - this.y;
+      const aligned =
+        (this.dir === UP && dy < 0 && Math.abs(dx) < 1.5) ||
+        (this.dir === DOWN && dy > 0 && Math.abs(dx) < 1.5) ||
+        (this.dir === LEFT && dx < 0 && Math.abs(dy) < 1.5) ||
+        (this.dir === RIGHT && dx > 0 && Math.abs(dy) < 1.5);
+      if (aligned || Math.random() < 0.02) this.shoot();
+      this.shootTimer = Math.floor(Math.random() * 140) + 80;
+    }
+  }
+}
+
+function spawnEnemies() {
+  const cx = Math.floor(COLS / 2);
+  const spawnPoints = [[0, 0], [cx, 0], [COLS - 1, 0], [0, ROWS - 1], [COLS - 1, ROWS - 1]];
+  const count = Math.min(3 + wave, 6);
+  for (let i = 0; i < count; i++) {
+    const sp = spawnPoints[i % spawnPoints.length];
+    const e = new Enemy(sp[0], sp[1]);
+    e.x = sp[0]; e.y = sp[1];
+    if (tankAt(e.x, e.y, null) || map[e.y][e.x] !== EMPTY) {
+      let placed = false;
+      for (let y = 0; y < 3 && !placed; y++)
+        for (let x = 0; x < COLS && !placed; x++)
+          if (map[y][x] === EMPTY && !tankAt(x, y, null)) { e.x = x; e.y = y; placed = true; }
+      if (!placed) continue;
+    }
+    enemies.push(e);
+  }
+}
+
+function nextWave() {
+  if (spawning) return;
+  spawning = true; wave++;
+  setMapSize(wave);
+  loadMap(generateMap(wave));
+  const sp = getSpawnPos();
+  player.x = sp.x; player.y = sp.y;
+  score += 200; lives += 3; updateUI();
+  bullets = []; invincibleTimer = 180;
+  pendingTimers.push(setTimeout(() => { spawnEnemies(); spawning = false; }, 1000));
+}
+
 function drawMap() {
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const px = x * CELL, py = y * CELL;
       switch (map[y][x]) {
         case BRICK:
-          ctx.fillStyle = '#c67a3a';
-          ctx.fillRect(px, py, CELL, CELL);
+          ctx.fillStyle = '#c67a3a'; ctx.fillRect(px, py, CELL, CELL);
           ctx.fillStyle = '#a0522d';
           ctx.fillRect(px + 2, py + 2, CELL / 2 - 2, CELL / 2 - 2);
           ctx.fillRect(px + CELL / 2, py + CELL / 2, CELL / 2 - 2, CELL / 2 - 2);
-          ctx.strokeStyle = '#8b4513';
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#8b4513'; ctx.lineWidth = 1;
           ctx.strokeRect(px, py, CELL, CELL);
           break;
         case STEEL:
-          ctx.fillStyle = '#888';
-          ctx.fillRect(px, py, CELL, CELL);
-          ctx.fillStyle = '#aaa';
-          ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
-          ctx.fillStyle = '#666';
-          ctx.fillRect(px + 5, py + 5, CELL - 10, CELL - 10);
+          ctx.fillStyle = '#888'; ctx.fillRect(px, py, CELL, CELL);
+          ctx.fillStyle = '#aaa'; ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
+          ctx.fillStyle = '#666'; ctx.fillRect(px + 5, py + 5, CELL - 10, CELL - 10);
           break;
         case BASE:
-          ctx.fillStyle = '#e94560';
-          ctx.fillRect(px, py, CELL, CELL);
-          // Star pattern
-          ctx.fillStyle = '#f5c518';
-          ctx.beginPath();
-          const cx = px + CELL / 2, cy = py + CELL / 2;
+          ctx.fillStyle = '#e94560'; ctx.fillRect(px, py, CELL, CELL);
+          ctx.fillStyle = '#f5c518'; ctx.beginPath();
+          const bcy = py + CELL / 2, bcx = px + CELL / 2;
           for (let i = 0; i < 5; i++) {
-            const a = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-            const r = CELL / 3;
-            if (i === 0) ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-            else ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+            const a = (i * 4 * Math.PI) / 5 - Math.PI / 2, r = CELL / 3;
+            if (i === 0) ctx.moveTo(bcx + Math.cos(a) * r, bcy + Math.sin(a) * r);
+            else ctx.lineTo(bcx + Math.cos(a) * r, bcy + Math.sin(a) * r);
           }
-          ctx.closePath();
-          ctx.fill();
+          ctx.closePath(); ctx.fill();
           break;
       }
     }
   }
-  // Grid lines
-  ctx.strokeStyle = '#1a1a1a';
-  ctx.lineWidth = 1;
-  for (let x = 0; x <= COLS; x++) {
-    ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke();
-  }
-  for (let y = 0; y <= ROWS; y++) {
-    ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke();
-  }
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1;
+  for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke(); }
+  for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke(); }
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawMap();
-
-  // Draw base flag at bottom center
-  if (map[ROWS-1] && map[ROWS-1][6] !== BASE) {
+  const bcx = Math.floor(COLS / 2);
+  if (map[ROWS-1] && map[ROWS-1][bcx] !== BASE) {
     ctx.fillStyle = '#e94560';
-    ctx.fillRect(6 * CELL + 5, (ROWS - 1) * CELL + 5, CELL - 10, CELL - 10);
-    ctx.fillStyle = '#f5c518';
-    ctx.font = '20px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('⭐', 6 * CELL + CELL / 2, (ROWS - 1) * CELL + CELL / 2 + 7);
+    ctx.fillRect(bcx * CELL + 5, (ROWS - 1) * CELL + 5, CELL - 10, CELL - 10);
+    ctx.fillStyle = '#f5c518'; ctx.font = '20px serif'; ctx.textAlign = 'center';
+    ctx.fillText('⭐', bcx * CELL + CELL / 2, (ROWS - 1) * CELL + CELL / 2 + 7);
   }
-
-  // Draw tanks
-  if (player.active) player.draw();
+  if (player.active) {
+    if (invincibleTimer > 0 && Math.floor(invincibleTimer / 8) % 2 === 0) {
+      ctx.globalAlpha = 0.3; player.draw(); ctx.globalAlpha = 1;
+    } else { player.draw(); }
+  }
   for (const e of enemies) if (e.active) e.draw();
-
-  // Draw bullets
   for (const b of bullets) if (b.active) b.draw();
-
-  // Draw explosions
   for (let i = explosions.length - 1; i >= 0; i--) {
     const ex = explosions[i];
     ctx.fillStyle = `rgba(255, 180, 0, ${ex.life / 15})`;
@@ -531,88 +599,114 @@ function draw() {
     ex.life--;
     if (ex.life <= 0) explosions.splice(i, 1);
   }
-
-  // Game over overlay
+  if (paused && !gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#f5c518'; ctx.font = 'bold 40px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('⏸ 暂停中', canvas.width / 2, canvas.height / 2 - 10);
+    ctx.fillStyle = '#fff'; ctx.font = '18px sans-serif';
+    ctx.fillText('按 P 继续', canvas.width / 2, canvas.height / 2 + 40);
+  }
   if (gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = lives > 0 ? '#4ade80' : '#ef4444';
-    ctx.font = 'bold 36px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(lives > 0 ? '🎉 胜利!' : '💀 游戏结束', canvas.width / 2, canvas.height / 2 - 10);
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = gameWon ? '#4ade80' : '#ef4444';
+    ctx.font = 'bold 36px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(gameWon ? '🎉 胜利!' : '💀 游戏结束', canvas.width / 2, canvas.height / 2 - 10);
+    ctx.fillStyle = '#fff'; ctx.font = '18px sans-serif';
     ctx.fillText('按 R 重新开始', canvas.width / 2, canvas.height / 2 + 40);
   }
 }
 
-// --- Main Loop ---
 function update() {
-  if (gameOver) return;
-
-  // Player movement
+  if (!gameStarted || gameOver) { draw(); gameLoop = requestAnimationFrame(update); return; }
+  if (paused) { draw(); gameLoop = requestAnimationFrame(update); return; }
   if (player.active) {
-    if (keyState['KeyW'] || keyState['ArrowUp'])    { player.dir = UP; player.tryMove(); }
-    if (keyState['KeyS'] || keyState['ArrowDown'])  { player.dir = DOWN; player.tryMove(); }
-    if (keyState['KeyA'] || keyState['ArrowLeft'])  { player.dir = LEFT; player.tryMove(); }
-    if (keyState['KeyD'] || keyState['ArrowRight']) { player.dir = RIGHT; player.tryMove(); }
-
+    if (invincibleTimer > 0) invincibleTimer--;
+    playerMoveCooldown--;
+    if (playerMoveCooldown <= 0) {
+      if (keyState['KeyW'] || keyState['ArrowUp'] || keyState['dirUp'])    { player.dir = UP; player.tryMove(); playerMoveCooldown = 12; }
+      else if (keyState['KeyS'] || keyState['ArrowDown'] || keyState['dirDown'])  { player.dir = DOWN; player.tryMove(); playerMoveCooldown = 12; }
+      else if (keyState['KeyA'] || keyState['ArrowLeft'] || keyState['dirLeft'])  { player.dir = LEFT; player.tryMove(); playerMoveCooldown = 12; }
+      else if (keyState['KeyD'] || keyState['ArrowRight'] || keyState['dirRight']) { player.dir = RIGHT; player.tryMove(); playerMoveCooldown = 12; }
+    }
     shootCooldown--;
-    if ((keyState['KeyK'] || keyState['Space']) && shootCooldown <= 0) {
-      player.shoot();
-      shootCooldown = 20;
+    if ((keyState['KeyK'] || keyState['Space'] || keyState['fire']) && shootCooldown <= 0) {
+      player.shoot(); shootCooldown = 30;
     }
   }
-
-  // Update enemies
   for (const e of enemies) e.update();
-
-  // Update bullets
   for (const b of bullets) b.update();
-
-  // Cleanup dead
   for (let i = bullets.length - 1; i >= 0; i--) if (!bullets[i].active) bullets.splice(i, 1);
   for (let i = enemies.length - 1; i >= 0; i--) if (!enemies[i].active) enemies.splice(i, 1);
-
-  // Check if all enemies dead
-  if (enemies.length === 0 && !gameOver && player.active) {
-    nextWave();
-  }
-
+  if (enemies.length === 0 && !gameOver && player.active && !spawning) nextWave();
   draw();
   gameLoop = requestAnimationFrame(update);
 }
 
-function initGame() {
+function startGame() {
   if (gameLoop) cancelAnimationFrame(gameLoop);
-  map = [];
-  enemies = [];
-  bullets = [];
-  explosions = [];
-  score = 0; lives = 3; kills = 0; wave = 1; gameOver = false;
-  shootCooldown = 0;
-  loadMap(MAPS[0]);
-  player = new Tank(6, 12, UP, '#4ade80');
+  for (const t of pendingTimers) clearTimeout(t);
+  pendingTimers = [];
+  map = []; enemies = []; bullets = []; explosions = [];
+  score = 0; lives = 3; kills = 0; wave = 1; gameOver = false; gameWon = false; paused = false; spawning = false;
+  gameStarted = true;
+  shootCooldown = 0; playerMoveCooldown = 0; invincibleTimer = 180;
+  setMapSize(1);
+  loadMap(generateMap(1));
+  const sp = getSpawnPos();
+  player = new Tank(sp.x, sp.y, UP, '#4ade80');
   updateUI();
   spawnEnemies();
-  draw();
-  // Restart loop if needed
+  document.getElementById('startScreen').style.display = 'none';
   gameLoop = requestAnimationFrame(update);
+}
+
+function initGame() {
+  enemies = []; bullets = []; explosions = [];
+  setMapSize(1);
+  loadMap(generateMap(1));
+  player = new Tank(getSpawnPos().x, getSpawnPos().y, UP, '#4ade80');
+  draw();
+}
+
+// --- Touch controls ---
+function setupTouchBtn(el, key) {
+  el.addEventListener('pointerdown', e => { e.preventDefault(); keyState[key] = true; });
+  el.addEventListener('pointerup', e => { e.preventDefault(); keyState[key] = false; });
+  el.addEventListener('pointerleave', e => { e.preventDefault(); keyState[key] = false; });
+  el.addEventListener('pointercancel', e => { e.preventDefault(); keyState[key] = false; });
+}
+
+const dirMap = { up: 'dirUp', down: 'dirDown', left: 'dirLeft', right: 'dirRight' };
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  const dir = btn.dataset.dir;
+  setupTouchBtn(btn, dirMap[dir]);
+});
+setupTouchBtn(document.getElementById('fireBtn'), 'fire');
+
+// Prevent context menu on long press
+document.querySelector('.touch-pad').addEventListener('contextmenu', e => e.preventDefault());
+
+// Detect mobile and update hint
+const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth <= 768;
+if (isMobile) {
+  document.getElementById('startHint').textContent = '虚拟摇杆移动 · 发射按钮射击';
 }
 
 // --- Events ---
 window.addEventListener('keydown', e => {
   keyState[e.code] = true;
-  if (e.code === 'KeyR') initGame();
+  if (e.code === 'KeyP') { paused = !paused; e.preventDefault(); return; }
+  if (e.code === 'KeyR') { startGame(); e.preventDefault(); return; }
   e.preventDefault();
 });
-window.addEventListener('keyup', e => {
-  keyState[e.code] = false;
-  e.preventDefault();
-});
-document.getElementById('restart').addEventListener('click', initGame);
+window.addEventListener('keyup', e => { keyState[e.code] = false; e.preventDefault(); });
 
-// --- Start ---
+document.getElementById('restart').addEventListener('click', startGame);
+document.getElementById('pauseBtn').addEventListener('click', () => { paused = !paused; });
+document.getElementById('btnStart').addEventListener('click', startGame);
+document.getElementById('mRestart').addEventListener('click', startGame);
+document.getElementById('mPauseBtn').addEventListener('click', () => { paused = !paused; });
+
 initGame();
 </script>
 </body>
