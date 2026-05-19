@@ -180,88 +180,89 @@ canvas {
     min-height: 100dvh;
     overflow: hidden;
   }
-  /* Overall mobile card: 149×71.5mm landscape */
+  /* Overall mobile card: 71.5×149mm portrait */
   .game-wrapper {
     display: flex;
-    flex-direction: row;
-    gap: 8px;
-    width: 149mm;
+    flex-direction: column;
+    gap: 5px;
+    width: 71.5mm;
     max-width: 100vw;
-    height: 71.5mm;
+    height: 149mm;
     max-height: 100dvh;
-    padding: 4px;
-    align-items: stretch;
+    padding: 5px;
+    align-items: center;
   }
   .sidebar { display: none; }
   .canvas-container {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 0;
   }
   canvas {
     display: block;
-    max-width: 71.5mm;
-    max-height: 71.5mm;
+    max-width: 100%;
+    max-height: 100%;
     width: auto !important;
     height: auto !important;
   }
-  /* Right panel: stats + controls */
+  /* Bottom panel: stats + controls */
   .mobile-right {
     display: flex;
     flex-direction: column;
-    flex: 1 1 auto;
-    justify-content: center;
+    flex: 0 1 auto;
     gap: 4px;
-    min-width: 0;
+    align-items: center;
+    width: 100%;
   }
   .mobile-stats {
     display: flex;
     justify-content: space-around;
-    font-size: 11px;
+    font-size: 12px;
     padding: 2px 0;
     flex-shrink: 0;
+    width: 100%;
   }
-  .mobile-stats .mstat .val { font-size: 13px; }
+  .mobile-stats .mstat .val { font-size: 14px; }
   .mobile-controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    flex: 1 1 auto;
-    justify-content: center;
+    gap: 5px;
+    flex-shrink: 0;
   }
   .touch-pad {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 15px;
   }
   .dpad {
     display: grid;
-    grid-template-columns: 38px 38px 38px;
-    grid-template-rows: 38px 38px 38px;
-    gap: 2px;
+    grid-template-columns: 42px 42px 42px;
+    grid-template-rows: 42px 42px 42px;
+    gap: 3px;
   }
-  .dpad-btn { font-size: 16px; border-radius: 5px; }
+  .dpad-btn { font-size: 18px; border-radius: 6px; }
   .fire-btn {
-    width: 60px; height: 60px;
-    font-size: 13px;
+    width: 68px; height: 68px;
+    font-size: 14px;
   }
   .action-btns {
-    gap: 8px;
+    gap: 10px;
     padding: 2px 0;
     flex-shrink: 0;
   }
   .action-btns .btn {
-    font-size: 11px;
-    padding: 5px 12px;
+    font-size: 12px;
+    padding: 6px 14px;
   }
-  .start-screen h1 { font-size: 20px; }
-  .start-screen .subtitle { font-size: 11px; }
-  .start-screen { gap: 8px; }
-  .btn-start { font-size: 16px; padding: 10px 24px; }
+  .start-screen h1 { font-size: 22px; }
+  .start-screen .subtitle { font-size: 12px; }
+  .start-screen { gap: 10px; }
+  .btn-start { font-size: 17px; padding: 10px 28px; }
 }
 @media (min-width: 769px) {
   canvas { width: auto; height: auto; }
