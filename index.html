@@ -103,14 +103,13 @@ canvas {
   padding: 0 10px;
 }
 /* Mobile touch controls */
+.mobile-right { display: none; }
 .mobile-controls {
-  display: none;
   width: 100%;
   max-width: 520px;
   flex-shrink: 0;
 }
 .mobile-stats {
-  display: none;
   justify-content: space-around;
   color: #e0e0e0;
   font-size: 14px;
@@ -175,40 +174,94 @@ canvas {
 @media (max-width: 768px) {
   body {
     align-items: center;
+    justify-content: center;
     padding: 0;
     min-height: 100vh;
     min-height: 100dvh;
     overflow: hidden;
   }
+  /* Overall mobile card: 149×71.5mm landscape */
   .game-wrapper {
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 0;
-    width: 100%;
-    padding: 0;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 149mm;
+    max-width: 100vw;
+    height: 71.5mm;
+    max-height: 100dvh;
+    padding: 4px;
+    align-items: stretch;
   }
   .sidebar { display: none; }
   .canvas-container {
-    flex-shrink: 1;
+    flex: 0 0 auto;
+    position: relative;
     display: flex;
-    justify-content: center;
     align-items: center;
-    min-height: 0;
+    justify-content: center;
   }
   canvas {
     display: block;
-    max-width: min(149mm, 100vw);
-    max-height: min(71.5mm, calc(100dvh - 240px));
+    max-width: 71.5mm;
+    max-height: 71.5mm;
     width: auto !important;
     height: auto !important;
   }
-  .mobile-stats { display: flex; width: 100%; max-width: 149mm; align-self: center; }
-  .mobile-controls { display: block; width: 100%; max-width: 149mm; align-self: center; }
-  .start-screen h1 { font-size: 26px; }
-  .start-screen { gap: 15px; }
+  /* Right panel: stats + controls */
+  .mobile-right {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+  }
+  .mobile-stats {
+    display: flex;
+    justify-content: space-around;
+    font-size: 11px;
+    padding: 2px 0;
+    flex-shrink: 0;
+  }
+  .mobile-stats .mstat .val { font-size: 13px; }
+  .mobile-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .touch-pad {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .dpad {
+    display: grid;
+    grid-template-columns: 38px 38px 38px;
+    grid-template-rows: 38px 38px 38px;
+    gap: 2px;
+  }
+  .dpad-btn { font-size: 16px; border-radius: 5px; }
+  .fire-btn {
+    width: 60px; height: 60px;
+    font-size: 13px;
+  }
+  .action-btns {
+    gap: 8px;
+    padding: 2px 0;
+    flex-shrink: 0;
+  }
+  .action-btns .btn {
+    font-size: 11px;
+    padding: 5px 12px;
+  }
+  .start-screen h1 { font-size: 20px; }
+  .start-screen .subtitle { font-size: 11px; }
+  .start-screen { gap: 8px; }
+  .btn-start { font-size: 16px; padding: 10px 24px; }
 }
 @media (min-width: 769px) {
   canvas { width: auto; height: auto; }
@@ -241,33 +294,33 @@ canvas {
       <div><span>R</span> 重新开始</div>
     </div>
   </div>
-</div>
-
-<!-- Mobile controls -->
-<div class="mobile-stats" id="mobileStats">
-  <div class="mstat">🏆 <span class="val" id="mScore">0</span></div>
-  <div class="mstat">❤️ <span class="val" id="mLives">3</span></div>
-  <div class="mstat">💀 <span class="val" id="mKills">0</span></div>
-  <div class="mstat">🌊 <span class="val" id="mWave">1</span></div>
-</div>
-<div class="mobile-controls" id="mobileControls">
-  <div class="touch-pad">
-    <div class="dpad" id="dpad">
-      <div class="dpad-empty"></div>
-      <button class="dpad-btn" data-dir="up">▲</button>
-      <div class="dpad-empty"></div>
-      <button class="dpad-btn" data-dir="left">◀</button>
-      <div class="dpad-empty"></div>
-      <button class="dpad-btn" data-dir="right">▶</button>
-      <div class="dpad-empty"></div>
-      <button class="dpad-btn" data-dir="down">▼</button>
-      <div class="dpad-empty"></div>
+  <div class="mobile-right">
+    <div class="mobile-stats" id="mobileStats">
+      <div class="mstat">🏆 <span class="val" id="mScore">0</span></div>
+      <div class="mstat">❤️ <span class="val" id="mLives">3</span></div>
+      <div class="mstat">💀 <span class="val" id="mKills">0</span></div>
+      <div class="mstat">🌊 <span class="val" id="mWave">1</span></div>
     </div>
-    <button class="fire-btn" id="fireBtn">发射</button>
-  </div>
-  <div class="action-btns">
-    <button class="btn" id="mPauseBtn" style="background:#0f3460;">暂停</button>
-    <button class="btn" id="mRestart">重新开始</button>
+    <div class="mobile-controls" id="mobileControls">
+      <div class="touch-pad">
+        <div class="dpad" id="dpad">
+          <div class="dpad-empty"></div>
+          <button class="dpad-btn" data-dir="up">▲</button>
+          <div class="dpad-empty"></div>
+          <button class="dpad-btn" data-dir="left">◀</button>
+          <div class="dpad-empty"></div>
+          <button class="dpad-btn" data-dir="right">▶</button>
+          <div class="dpad-empty"></div>
+          <button class="dpad-btn" data-dir="down">▼</button>
+          <div class="dpad-empty"></div>
+        </div>
+        <button class="fire-btn" id="fireBtn">发射</button>
+      </div>
+      <div class="action-btns">
+        <button class="btn" id="mPauseBtn" style="background:#0f3460;">暂停</button>
+        <button class="btn" id="mRestart">重新开始</button>
+      </div>
+    </div>
   </div>
 </div>
 
