@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>坦克大战 - Tank Battle</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 body {
   background: #1a1a2e;
   display: flex;
@@ -16,6 +16,7 @@ body {
   overflow-y: auto;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -768,8 +769,9 @@ document.querySelectorAll('.dpad-btn').forEach(btn => {
 });
 setupTouchBtn(document.getElementById('fireBtn'), 'fire');
 
-// Prevent context menu on long press
-document.querySelector('.touch-pad').addEventListener('contextmenu', e => e.preventDefault());
+// Prevent long-press menu, copy, paste, select on mobile
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
 
 // Detect mobile and update hint
 const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth <= 768;
